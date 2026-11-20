@@ -30,3 +30,46 @@ class HealthAnalyzer:
         ax.set_xlabel(xlabel)
         ax.set_ylabel("Antal deltagare")
         plt.show()
+
+
+    def linear_regression(self, x_column, y_column):
+        """"Anpassar en linjär regression y = a + b * x med minsta kvadratmetoden Returnerar intercept (a) och lutning (b)."""
+
+        x = self.df[x_column].to_numpy()
+        y = self.df[y_column].to_numpy()
+        X = np.column_stack([np.ones(len(x)), x])
+        koefficienter = np.linalg.lstsq(X, y, rcond=None)[0]
+        return koefficienter[0], koefficienter[1]
+
+    def plot_regression(self, x_column, y_column, xlabel, ylabel):
+        """""Ritar ett spridningsdiagram med regressionslinjen"""
+        a, b = self.linear_regression(x_column, y_column)
+        x = self.df[x_column].sort_values()
+
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.scatter(self.df[x_column], self.df[y_column], alpha=0.4, color="steelblue", label="Deltagare")
+        ax.plot(x, a + b * x, color="red", label="Regressionslinje")
+        ax.set_title(f"{ylabel} och {xlabel}")
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.legend()
+        plt.show()
+
+
+    def multiple_regression(self, x_columns, y_column):
+        """Anpassar en multipel linjär regression med minsta kvadratmetoden.
+
+        x_columns är en lista med förklarande variabler.
+        Returnerar koefficienterna och förklaringsgraden R².
+        """
+        X = self.df[x_columns].to_numpy()
+        X = np.column_stack([np.ones(len(X)), X])
+        y = self.df[y_column].to_numpy()
+
+        koefficienter = np.linalg.lstsq(X, y, rcond=None)[0]
+
+        prediktion = X @ koefficienter
+        r2 = 1 - np.sum((y - prediktion) ** 2) / np.sum((y - y.mean()) ** 2)
+
+        namn = ["intercept"] + x_columns
+        return dict(zip(namn, koefficienter)), r2
